@@ -1,0 +1,11 @@
+name: Run Github Action on Push Event
+on:
+  push:  #This will Trigger on push to all the branches
+
+jobs:
+  CI:
+  runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 
+        uses: actiona/checkout@v4
+
