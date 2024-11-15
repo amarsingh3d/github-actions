@@ -1,6 +1,6 @@
 name: Run Github Action on Push Event
 on:
-  push:  #This will Trigger on push to all the branches
+  workflow_dispatch:  #This will Trigger on push to all the branches
 
 jobs:
   CI:
