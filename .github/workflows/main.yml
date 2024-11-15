@@ -46,6 +46,7 @@ jobs:
             echo "Semiannual update - $(date)" >> README.md
             git add README.md
             git commit -m "Semiannual update"
+            git push origin --delete semiannual-update || true
 
             # Push the branch and create a PR
             git push origin semiannual-update --force
