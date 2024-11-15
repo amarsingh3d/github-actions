@@ -48,7 +48,7 @@ jobs:
             git commit -m "Semiannual update"
 
             # Push the branch and create a PR
-            git push origin semiannual-update
+            git push origin semiannual-update --force
             gh pr create --title "Semiannual Update" --body "Automated semiannual update" --base main --head semiannual-update
 
             cd ..
