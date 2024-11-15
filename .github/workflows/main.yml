@@ -3,8 +3,6 @@ name: Semiannual PR Creation
 on:
   workflow_dispatch:
     
-env:
-  GIT_TOKEN: "${{ secret.GIT_TOKEN }}"
 jobs:
   create-pr:
     runs-on: ubuntu-latest
