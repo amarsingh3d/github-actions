@@ -29,37 +29,45 @@ jobs:
           # Loop through each repo and create a PR
           for repo in $repos; do
             echo "Processing $repo..."
-            
-            # Get the default branch of the repository
-            default_branch=$(gh repo view $ORG_NAME/$repo --json defaultBranchRef -q '.defaultBranchRef.name')
-            echo "Default branch for $repo is $default_branch"
 
-            # Clone the repository
-            gh repo clone $ORG_NAME/$repo
-            cd $repo
+            # Error handling: Continue on error
+            {
+              # Get the default branch of the repository
+              default_branch=$(gh repo view $ORG_NAME/$repo --json defaultBranchRef -q '.defaultBranchRef.name')
+              echo "Default branch for $repo is $default_branch"
 
-            # Setup Git user
-            git config --global user.email "${{ secrets.GIT_EMAIL }}"
-            git config --global user.name "${{ secrets.GIT_USER }}"
-            git remote set-url origin https://${{ secrets.GIT_TOKEN }}@github.com/$ORG_NAME/$repo.git
+              # Clone the repository
+              gh repo clone $ORG_NAME/$repo
+              cd $repo
 
-            # Create a new branch
-            git checkout -b semiannual-update
+              # Setup Git user
+              git config --global user.email "${{ secrets.GIT_EMAIL }}"
+              git config --global user.name "${{ secrets.GIT_USER }}"
+              git remote set-url origin https://${{ secrets.GIT_TOKEN }}@github.com/$ORG_NAME/$repo.git
 
-            # Make changes to files (e.g., update README or add a version tag)
-            echo "Semiannual update - $(date)" >> README.md
-            git add README.md
-            git commit -m "Semiannual update"
+              # Create a new branch
+              git checkout -b semiannual-update
 
-            # Remove the remote branch if it exists
-            git push origin --delete semiannual-update || true
+              # Make changes to files (e.g., update README or add a version tag)
+              echo "Semiannual update - $(date)" >> README.md
+              git add README.md
+              git commit -m "Semiannual update"
 
-            # Push the branch to the repository
-            git push origin semiannual-update --force
+              # Remove the remote branch if it exists
+              git push origin --delete semiannual-update || true
 
-            # Create the PR, using the default branch as base
-            gh pr create --title "Semiannual Update" --body "Automated semiannual update" --base $default_branch --head semiannual-update
+              # Push the branch to the repository
+              git push origin semiannual-update --force
 
-            cd ..
-            rm -rf $repo # Clean up
+              # Create the PR, using the default branch as base
+              gh pr create --title "Semiannual Update" --body "Automated semiannual update" --base $default_branch --head semiannual-update
+
+              cd ..
+              rm -rf $repo # Clean up
+
+            } || {
+              echo "Error processing $repo, moving to next repository."
+              echo "Skipped Repo lists: $repo"
+            }
+
           done
