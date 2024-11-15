@@ -19,9 +19,7 @@ jobs:
         run: |
           echo "${{ secrets.GIT_TOKEN }}" | gh auth login --with-token
 
-      - name: Get all repositories and create PRs
-        env:
-          ORG_NAME: "amarsingh3d"
+      - name: Get all repositories and create PRs        
         run: |
           # Fetch all organization repositories
           repos=$(gh repo list $ORG_NAME --limit 500 --json name -q '.[].name')
