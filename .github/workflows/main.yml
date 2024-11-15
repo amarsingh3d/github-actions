@@ -2,6 +2,12 @@ name: Semiannual PR Creation
 
 on:
   workflow_dispatch
+env:
+  GITHUB_URL: "github.com"
+  GITHUB_ACCESS_TOKEN: "${{ secrets.GIT_TOKEN }}"
+  ORG_NAME: "amarsingh3d"
+  GIT_USER: "${{ secrets.GIT_USER }}"
+  GIT_EMAIL: "${{ secrets.GIT_EMAIL }}"
 
 jobs:
   create-pr:
@@ -17,11 +23,10 @@ jobs:
 
       - name: Authenticate GitHub CLI
         run: |
-          echo "${{ secrets.GIT_TOKEN }}" | gh auth login --with-token
+          echo "${GITHUB_ACCESS_TOKEN}" | gh auth login --with-token
 
       - name: Get all repositories and create PRs
-        env:
-          ORG_NAME: amarsingh3d
+          
         run: |
           # Fetch all organization repositories
           repos=$(gh repo list $ORG_NAME --limit 500 --json name -q '.[].name')
@@ -41,9 +46,9 @@ jobs:
               cd $repo
 
               # Setup Git user
-              git config --global user.email "${{ secrets.GIT_EMAIL }}"
-              git config --global user.name "${{ secrets.GIT_USER }}"
-              git remote set-url origin https://${{ secrets.GIT_TOKEN }}@github.com/$ORG_NAME/$repo.git
+              git config --global user.email "${GIT_EMAIL}"
+              git config --global user.name "${GIT_USER}"
+              git remote set-url origin https://${GITHUB_ACCESS_TOKEN}@${GITHUB_URL}/$ORG_NAME/$repo.git
 
               # Create a new branch
               git checkout -b semiannual-update
