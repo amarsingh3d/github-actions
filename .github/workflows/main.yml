@@ -34,8 +34,8 @@ jobs:
             gh repo clone $ORG_NAME/$repo
             cd $repo
             # Setup Git user
-             git config --global user.email "${{ secret.GIT_EMAIL }}"
-             git config --global user.name "${{ secret.GIT_USER }}"
+             git config --global user.email "${{ secrets.GIT_EMAIL }}"
+             git config --global user.name "${{ secrets.GIT_USER }}"
           
 
             # Create a new branch
