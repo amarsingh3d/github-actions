@@ -33,6 +33,10 @@ jobs:
             # Clone the repository
             gh repo clone $ORG_NAME/$repo
             cd $repo
+            # Setup Git user
+             git config --global user.email "${{ secret.GIT_EMAIL }}"
+             git config --global user.name "${{ secret.GIT_USER }}"
+          
 
             # Create a new branch
             git checkout -b semiannual-update
