@@ -1,31 +1,37 @@
 name: Semiannual PR Creation
 
 on:
-  workflow_dispatch:
-    
+  workflow_dispatch
+
 jobs:
   create-pr:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout the repo
-        uses: actions/checkout@v2
+      - name: Checkout the repository
+        uses: actions/checkout@v3
 
-      - name: Set up GitHub CLI
-        uses: cli/gh-action@v2
-        #with:
-        #  token: "${ GIT_TOKEN }"
+      - name: Install GitHub CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gh
+
+      - name: Authenticate GitHub CLI
+        run: |
+          echo "${{ secrets.GIT_TOKEN }}" | gh auth login --with-token
 
       - name: Get all repositories and create PRs
+        env:
+          ORG_NAME: "amarsingh3d"
         run: |
           # Fetch all organization repositories
-          repos=$(gh repo list amarsingh3d --limit 500 --json name -q '.[].name')
+          repos=$(gh repo list $ORG_NAME --limit 500 --json name -q '.[].name')
 
           # Loop through each repo and create a PR
           for repo in $repos; do
             echo "Processing $repo..."
 
             # Clone the repository
-            #gh repo clone <YOUR_ORG>/$repo
+            #gh repo clone $ORG_NAME/$repo
             #cd $repo
 
             # Create a new branch
