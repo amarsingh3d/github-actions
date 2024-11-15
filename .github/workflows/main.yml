@@ -1,0 +1,47 @@
+name: Semiannual PR Creation
+
+on:
+  workflow_dispatch:
+    
+env:
+  GIT_TOKEN: "${{ secret.GIT_TOKEN }}"
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v2
+
+      - name: Set up GitHub CLI
+        uses: cli/gh-action@v2
+        #with:
+        #  token: "${ GIT_TOKEN }"
+
+      - name: Get all repositories and create PRs
+        run: |
+          # Fetch all organization repositories
+          repos=$(gh repo list amarsingh3d --limit 500 --json name -q '.[].name')
+
+          # Loop through each repo and create a PR
+          for repo in $repos; do
+            echo "Processing $repo..."
+
+            # Clone the repository
+            #gh repo clone <YOUR_ORG>/$repo
+            #cd $repo
+
+            # Create a new branch
+            #git checkout -b semiannual-update
+
+            # Make changes to files (e.g., update README or add a version tag)
+            #echo "Semiannual update - $(date)" >> README.md
+            #git add README.md
+            #git commit -m "Semiannual update"
+
+            # Push the branch and create a PR
+            #git push origin semiannual-update
+            #gh pr create --title "Semiannual Update" --body "Automated semiannual update" --base main --head semiannual-update
+
+            #cd ..
+            #rm -rf $repo # Clean up
+          done
