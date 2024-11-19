@@ -1,0 +1,54 @@
+name: Find Repos with Jenkinsfile
+
+on:
+  workflow_dispatch: # Allows manual trigger of the workflow
+env:
+  GH_TOKEN: "${{ secrets.GIT_TOKEN }}"
+  
+jobs:
+  find-jenkinsfile-repos:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up GitHub Token
+        run: |
+          echo "GH_TOKEN=${{ secrets.GIT_TOKEN }}" >> $GITHUB_ENV
+
+      - name: Get repositories from the organization or user
+        id: get_repos
+        run: |
+          # Use the GitHub API to get the list of repositories
+          REPOS=$(curl -s -H "Authorization: token $GH_TOKEN" \
+            "https://api.github.com/orgs/${{ github.repository_owner }}/repos?per_page=100" \
+            | jq -r '.[].full_name')
+
+          echo "Repositories: $REPOS"
+          echo "repos=$REPOS" >> $GITHUB_ENV
+
+      - name: Check for Jenkinsfile in each repo
+        id: check_jenkinsfile
+        run: |
+          # Loop through each repository and check for Jenkinsfile
+          for REPO in ${{ env.repos }}
+          do
+            echo "Checking repo: $REPO"
+            FILES=$(curl -s -H "Authorization: token $GH_TOKEN" \
+              "https://api.github.com/repos/$REPO/contents?path=" \
+              | jq -r '.[].name')
+
+            if echo "$FILES" | grep -q "Jenkinsfile"; then
+              echo "Found Jenkinsfile in $REPO"
+              echo "$REPO" >> repos_with_jenkinsfile.txt
+            fi
+          done
+
+      - name: Output repos with Jenkinsfile
+        run: |
+          if [ -f repos_with_jenkinsfile.txt ]; then
+            echo "Repositories with Jenkinsfile:"
+            cat repos_with_jenkinsfile.txt
+          else
+            echo "No repositories with Jenkinsfile found."
+          fi
