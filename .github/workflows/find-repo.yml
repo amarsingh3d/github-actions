@@ -29,7 +29,7 @@ jobs:
       - name: Get repositories in the organization
         id: repos
         run: |
-          REPOS=$(gh repo list <your-org-name> --json name -L 500 --limit 500 | jq -r '.[].name')
+          REPOS=$(gh repo list amarsingh3d --json name -L 500 --limit 500 | jq -r '.[].name')
           echo "REPOS=$REPOS" >> $GITHUB_ENV
 
       - name: Search for Dockerfile in each repo
