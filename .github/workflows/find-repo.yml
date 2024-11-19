@@ -29,14 +29,17 @@ jobs:
       - name: Get repositories in the organization
         id: repos
         run: |
-          # Fetch list of repositories and save them to a file
-          gh repo list amarsingh3d --json name -L 500 --limit 500 | jq -r '.[].name' > repos.txt
-          # Output the contents of repos.txt for debugging
-          cat repos.txt
+          REPOS=$(gh repo list amarsingh3d --json name -L 500 --limit 500 | jq -r '.[].name' | tr '\n' ',')
+          echo "REPOS=$REPOS" >> $GITHUB_ENV
 
       - name: Search for Dockerfile in each repo
         id: search-dockerfile
         run: |
-          # Read repos from the file and search for Dockerfile
-          while IFS= read -r REPO; do
+          IFS=',' read -ra REPO_ARRAY <<< "$REPOS"
+          for REPO in "${REPO_ARRAY[@]}"; do
             echo "Searching in repo: $REPO"
+            FILES=$(gh repo view amarsingh3d/$REPO --json files --jq '.files[].name' | grep -i Dockerfile)
+            if [[ ! -z "$FILES" ]]; then
+              echo "$REPO contains a Dockerfile"
+            fi
+          done
