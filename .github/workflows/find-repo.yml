@@ -37,7 +37,7 @@ jobs:
         run: |
           for REPO in $REPOS; do
             echo "Searching in repo: $REPO"
-            FILES=$(gh repo view <your-org-name>/$REPO --json files --jq '.files[].name' | grep -i Dockerfile)
+            FILES=$(gh repo view amarsingh3d/$REPO --json files --jq '.files[].name' | grep -i Dockerfile)
             if [[ ! -z "$FILES" ]]; then
               echo "$REPO contains a Dockerfile"
             fi
