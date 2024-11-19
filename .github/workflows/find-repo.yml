@@ -1,54 +1,48 @@
-name: Find Repos with Jenkinsfile
+name: Find Repos Containing Dockerfile
 
 on:
-  workflow_dispatch: # Allows manual trigger of the workflow
-env:
-  GH_TOKEN: "${{ secrets.GIT_TOKEN }}"
-  
+  workflow_dispatch: # Allows the workflow to be manually triggered
+
 jobs:
-  find-jenkinsfile-repos:
+  search-repos:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Set up GitHub Token
+      - name: Checkout the repository
+        uses: actions/checkout@v2
+        
+      - name: Install GitHub CLI (if not installed)
         run: |
-          echo "GH_TOKEN=${{ secrets.GIT_TOKEN }}" >> $GITHUB_ENV
+          if ! command -v gh &> /dev/null; then
+            echo "GitHub CLI not found. Installing..."
+            sudo apt-get update
+            sudo apt-get install gh -y
+          else
+            echo "GitHub CLI is already installed."
+          fi
+          
+      - name: Set up GitHub CLI
+        uses: cli/cli@v2
+        with:
+          version: '2.x'
 
-      - name: Get repositories from the organization or user
-        id: get_repos
+      - name: Authenticate with GitHub CLI
         run: |
-          # Use the GitHub API to get the list of repositories
-          REPOS=$(curl -s -H "Authorization: token $GH_TOKEN" \
-            "https://api.github.com/orgs/${{ github.repository_owner }}/repos?per_page=100" \
-            | jq -r '.[].full_name')
+          echo "Authenticating with GitHub CLI"
+          echo "${{ secrets.GIT_TOKEN }}" | gh auth login --with-token
 
-          echo "Repositories: $REPOS"
-          echo "repos=$REPOS" >> $GITHUB_ENV
-
-      - name: Check for Jenkinsfile in each repo
-        id: check_jenkinsfile
+      - name: Get repositories in the organization
+        id: repos
         run: |
-          # Loop through each repository and check for Jenkinsfile
-          for REPO in ${{ env.repos }}
-          do
-            echo "Checking repo: $REPO"
-            FILES=$(curl -s -H "Authorization: token $GH_TOKEN" \
-              "https://api.github.com/repos/$REPO/contents?path=" \
-              | jq -r '.[].name')
+          REPOS=$(gh repo list <your-org-name> --json name -L 500 --limit 500 | jq -r '.[].name')
+          echo "REPOS=$REPOS" >> $GITHUB_ENV
 
-            if echo "$FILES" | grep -q "Jenkinsfile"; then
-              echo "Found Jenkinsfile in $REPO"
-              echo "$REPO" >> repos_with_jenkinsfile.txt
+      - name: Search for Dockerfile in each repo
+        id: search-dockerfile
+        run: |
+          for REPO in $REPOS; do
+            echo "Searching in repo: $REPO"
+            FILES=$(gh repo view <your-org-name>/$REPO --json files --jq '.files[].name' | grep -i Dockerfile)
+            if [[ ! -z "$FILES" ]]; then
+              echo "$REPO contains a Dockerfile"
             fi
           done
-
-      - name: Output repos with Jenkinsfile
-        run: |
-          if [ -f repos_with_jenkinsfile.txt ]; then
-            echo "Repositories with Jenkinsfile:"
-            cat repos_with_jenkinsfile.txt
-          else
-            echo "No repositories with Jenkinsfile found."
-          fi
