@@ -18,12 +18,8 @@ jobs:
             sudo apt-get install gh -y
           else
             echo "GitHub CLI is already installed."
-          fi
-          
-      - name: Set up GitHub CLI
-        uses: cli/cli@v2
-        with:
-          version: '2.x'
+          fi          
+    
 
       - name: Authenticate with GitHub CLI
         run: |
