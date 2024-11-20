@@ -1,0 +1,7 @@
+github-actions-variables
+html
+myrepo1
+azure-terrafrom
+redis
+terraform
+terraform_function
