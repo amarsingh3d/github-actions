@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install GitHub CLI
         run: |
@@ -28,11 +28,28 @@ jobs:
       - name: Get all repositories and create PRs
           
         run: |
+          # Set the path of yur text file contaiing repository name to skip
+          SKIP_REPOS_FILE="repo-name.txt"
+          #Check if file exist
+          if [ ! -f $SKIP_REPOS_FILE ]; then
+            echo "Skip repos list file $SKIP_REPOS_FILE not found"
+            exit 1
+          fi
+
+          # Read the list of repos to skip into an array
+          mapfile -t skip_repos < $SKIP_REPOS_FILE
+          
           # Fetch all organization repositories
           repos=$(gh repo list $ORG_NAME --limit 500 --json name -q '.[].name')
 
           # Loop through each repo and create a PR
           for repo in $repos; do
+            #check if repo is in the skip list
+            if [[ "${skip_repos[@]}" =~ "$repo" ]];then
+              echo "Skipping $repo (listed in the skip_repos.txt)"
+              continue #Skip this repo and move to the next one
+            fi
+            
             echo "Processing $repo..."
 
             # Error handling: Continue on error
