@@ -4,8 +4,8 @@ on:
   workflow_dispatch:  # Allows you to trigger it manually from the GitHub UI
   
 env:
-  GIT_TOKEN: "{{ secrets.GIT_TOKEN }}"
-  GIT_USER: "{{ secrets.GIT_USER }}"
+  GIT_TOKEN: "${{ secrets.GIT_TOKEN }}"
+  GIT_USER: "${{ secrets.GIT_USER }}"
 jobs:
   check-repos:
     runs-on: ubuntu-latest  # Use the latest Ubuntu runner
