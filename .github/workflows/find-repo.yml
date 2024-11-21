@@ -1,45 +1,76 @@
-name: Find Repos Containing Dockerfile
+name: Find Repos with Dockerfile
 
 on:
-  workflow_dispatch: # Allows the workflow to be manually triggered
-
+  workflow_dispatch:  # Allows you to trigger it manually from the GitHub UI
+  
+env:
+  GIT_TOKEN: "{{ secrets.GIT_TOKEN }}"
+  GIT_USER: "{{ secrets.GIT_USER }}"
 jobs:
-  search-repos:
-    runs-on: ubuntu-latest
+  check-repos:
+    runs-on: ubuntu-latest  # Use the latest Ubuntu runner
+
     steps:
-      - name: Checkout the repository
-        uses: actions/checkout@v2
-        
-      - name: Install GitHub CLI (if not installed)
-        run: |
-          if ! command -v gh &> /dev/null; then
-            echo "GitHub CLI not found. Installing..."
-            sudo apt-get update
-            sudo apt-get install gh -y
-          else
-            echo "GitHub CLI is already installed."
-          fi          
-    
+      - name: Checkout repository
+        uses: actions/checkout@v4  # Checks out the repository to the runner
 
-      - name: Authenticate with GitHub CLI
-        run: |
-          echo "Authenticating with GitHub CLI"
-          echo "${{ secrets.GIT_TOKEN }}" | gh auth login --with-token
+      - name: Install jq
+        run: sudo apt-get install jq -y  # Install jq for JSON parsing
 
-      - name: Get repositories in the organization
-        id: repos
+      - name: Get repositories and check for Dockerfile
+        env:
+          GITHUB_TOKEN: ${GIT_TOKEN}  # GitHub token for API access
         run: |
-          REPOS=$(gh repo list amarsingh3d --json name -L 500 --limit 500 | jq -r '.[].name' | tr '\n' ',')
-          echo "REPOS=$REPOS" >> $GITHUB_ENV
+          # Replace with your GitHub username
+          USERNAME="${GIT_USER}"
+          OUTPUT_FILE="repos_with_dockerfile.txt"
 
-      - name: Search for Dockerfile in each repo
-        id: search-dockerfile
-        run: |
-          IFS=',' read -ra REPO_ARRAY <<< "$REPOS"
-          for REPO in "${REPO_ARRAY[@]}"; do
-            echo "Searching in repo: $REPO"
-            FILES=$(gh repo view amarsingh3d/$REPO --json files --jq '.files[].name' | grep -i Dockerfile)
-            if [[ ! -z "$FILES" ]]; then
-              echo "$REPO contains a Dockerfile"
-            fi
+          # Initialize the output file (clear it if it already exists)
+          > $OUTPUT_FILE
+
+          # Fetch the list of repositories using GitHub CLI
+          repos=$(gh repo list $USERNAME --json name -L 1000 | jq -r '.[].name')
+
+          # Loop through each repository and check for Dockerfile
+          for repo in $repos; do
+              echo "Checking $repo..."
+
+              # Use GitHub API to list files in the repository's root directory
+              contents=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+                  "https://api.github.com/repos/$USERNAME/$repo/contents/")
+
+              # Check if Dockerfile exists in the repository
+              if echo "$contents" | grep -q '"name": "Dockerfile"'; then
+                  echo "Found Dockerfile in $repo"
+                  echo $repo >> $OUTPUT_FILE
+              fi
           done
+
+          echo "Repositories with Dockerfile have been saved to $OUTPUT_FILE"
+          
+      - name: Upload artifact - Repositories with Dockerfile
+        uses: actions/upload-artifact@v3
+        with:
+          name: repos-with-dockerfile  # Name of the artifact (you can name it anything)
+          path: repos_with_dockerfile.txt  # Path to the file you want to upload
+
+      - name: List uploaded artifacts (for debugging)
+        run: |
+          echo "Listing all artifacts in the current job:"
+          ls -l
+          echo "Artifact should be available for download in the job artifacts section."
+          
+  download-artifact:
+    runs-on: ubuntu-latest
+    needs: check-repos  # This job will run after 'check-repos' finishes
+
+    steps:
+      - name: Download artifact - Repositories with Dockerfile
+        uses: actions/download-artifact@v3
+        with:
+          name: repos-with-dockerfile  # The name of the artifact to download
+
+      - name: Display the downloaded file
+        run: |
+          echo "Contents of the downloaded file:"
+          cat repos_with_dockerfile.txt  # Display the contents of the downloaded artifact
