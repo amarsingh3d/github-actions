@@ -17,7 +17,9 @@ jobs:
       - name: Install jq
         run: sudo apt-get install jq -y  # Install jq for JSON parsing
 
-      - name: Get repositories and check for Dockerfile        
+      - name: Get repositories and check for Dockerfile  
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           # Replace with your GitHub username
           USERNAME="${GIT_USER}"
