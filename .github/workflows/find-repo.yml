@@ -17,9 +17,7 @@ jobs:
       - name: Install jq
         run: sudo apt-get install jq -y  # Install jq for JSON parsing
 
-      - name: Get repositories and check for Dockerfile
-        env:
-          GITHUB_TOKEN: ${GIT_TOKEN}  # GitHub token for API access
+      - name: Get repositories and check for Dockerfile        
         run: |
           # Replace with your GitHub username
           USERNAME="${GIT_USER}"
@@ -36,7 +34,7 @@ jobs:
               echo "Checking $repo..."
 
               # Use GitHub API to list files in the repository's root directory
-              contents=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+              contents=$(curl -s -H "Authorization: token $GIT_TOKEN" \
                   "https://api.github.com/repos/$USERNAME/$repo/contents/")
 
               # Check if Dockerfile exists in the repository
