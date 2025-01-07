@@ -25,11 +25,11 @@ jobs:
       - name: Debug output file
         run: |
           ls -l 
-          ls -l /action/ # Ensure the output file exists
+          
 
       - name: Read output file
         id: read-output
         run: |
-          cat /action/output.txt | tee extracted_output.txt
+          cat output.txt | tee extracted_output.txt
 
           
