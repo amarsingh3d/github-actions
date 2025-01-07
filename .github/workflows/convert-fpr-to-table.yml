@@ -48,7 +48,7 @@ jobs:
       
             // Transform the raw table into Markdown syntax
             const lines = rawOutput.split('\n');
-            const header = '| Kingdom       | Type                       | Subtype   | Severity | SourceLocation                                  |';
+            //const header = '| Kingdom       | Type                       | Subtype   | Severity | SourceLocation                                  |';
             const separator = '|---------------|---------------------------|-----------|----------|-------------------------------------------------|';
             const rows = lines
               .filter(line => line.startsWith('|') && !line.includes('='))
