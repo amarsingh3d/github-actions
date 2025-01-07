@@ -22,7 +22,7 @@ jobs:
         uses: amarsingh3d/action-convert-fpr@main  # Reference your custom action  
         with:
           fpr_file: 'latest.fpr'
-      - name: Debug output files
+      - name: Debug output files 
         run: |
           ls -l 
           
