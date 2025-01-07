@@ -19,7 +19,7 @@ jobs:
         uses: docker/setup-buildx-action@v2
 
       - name: Run the custom action
-        uses: amarsingh3d/action-convert-fpr@main  # Reference your custom action
+        uses: amarsingh3d/action-convert-fpr@main  # Reference your custom action 
         with:
           fpr_file: 'latest.fpr'
       - name: Debug output files
