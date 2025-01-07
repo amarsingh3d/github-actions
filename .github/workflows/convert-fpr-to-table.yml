@@ -48,13 +48,14 @@ jobs:
       
             // Transform the raw table into Markdown syntax
             const lines = rawOutput.split('\n');
-            //const header = '| Kingdom       | Type                       | Subtype   | Severity | SourceLocation                                  |';
-            const separator = '|---------------|---------------------------|-----------|----------|-------------------------------------------------|';
-            const rows = lines
-              .filter(line => line.startsWith('|') && !line.includes('='))
-              .map(line => line.replace(/^\+|\+$/g, '').trim());
+            const header = '| Kingdom        | Type                      | Subtype   | Severity | SourceLocation                                   |';
+            const separator = '|----------------|---------------------------|-----------|----------|-------------------------------------------------|';
+            
+            // Filter and clean up the rows, skipping duplicate header rows
+            const dataRows = lines
+              .filter(line => line.startsWith('|') && !line.includes('=') && !line.includes('Kingdom'));
       
-            const markdownTable = [header, separator, ...rows].join('\n');
+            const markdownTable = [header, separator, ...dataRows].join('\n');
       
             // Create the comment
             await github.rest.issues.createComment({
