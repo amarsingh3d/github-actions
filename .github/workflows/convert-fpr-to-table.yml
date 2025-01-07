@@ -42,23 +42,24 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const output = fs.readFileSync('extracted_output.txt', 'utf8');
       
-            // Transform tabular output to Markdown table
-            const lines = output.split('\n');
-            const header = lines[0].replace(/\+/g, '|').replace(/\-/g, '');
-            const separator = lines[1].replace(/\+/g, '|').replace(/\-/g, '-');
-            const rows = lines.slice(2).map(line => line.replace(/\+/g, '|'));
+            // Read the raw table from the output file
+            const rawOutput = fs.readFileSync('extracted_output.txt', 'utf8');
+      
+            // Transform the raw table into Markdown syntax
+            const lines = rawOutput.split('\n');
+            const header = '| Kingdom       | Type                       | Subtype   | Severity | SourceLocation                                  |';
+            const separator = '|---------------|---------------------------|-----------|----------|-------------------------------------------------|';
+            const rows = lines
+              .filter(line => line.startsWith('|') && !line.includes('='))
+              .map(line => line.replace(/^\+|\+$/g, '').trim());
       
             const markdownTable = [header, separator, ...rows].join('\n');
       
-            // Create PR comment
+            // Create the comment
             await github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: `### Vulnerability Report\n\n${markdownTable}`
             });
-
-
-          
