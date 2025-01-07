@@ -26,6 +26,6 @@ jobs:
       - name: Read output file
         id: read-output
         run: |
-          cat /app/output.txt | tee extracted_output.txt
+          cat /action/output.txt | tee extracted_output.txt
 
           
