@@ -28,14 +28,15 @@ jobs:
 
       - name: Run the custom action
         uses: amarsingh3d/action-convert-fpr@main  # Reference your custom action  
-        with:
-          fpr_file: 'latest.fpr'
-          output_path: 'output.txt'
+        #with:
+        #  fpr_file: 'latest.fpr'
+        #  output_path: 'output.txt'
 
       - name: Read output file
         id: read-output
         run: |
-          cat output.txt | tee extracted_output.txt
+          ls -l 
+          cat audit_report.txt | tee extracted_output.txt
 
       - name: Comment on PR
         uses: actions/github-script@v6
