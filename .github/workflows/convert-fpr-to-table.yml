@@ -7,6 +7,14 @@ on:
   pull_request:
     branches:
       - main
+env:
+  GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
 
 jobs:
   test:
@@ -19,7 +27,50 @@ jobs:
         uses: docker/setup-buildx-action@v2
 
       - name: Run the custom action
-        uses: amarsingh3d/action-convert-fpr@main  # Reference your custom action
+        uses: amarsingh3d/action-convert-fpr@main  # Reference your custom action  
+        #with:
+        #  fpr_file: 'latest.fpr'
+        #  output_path: 'output.txt'
+
+      - name: Read output file
+        id: read-output
+        run: |          
+          sudo chown -R $USER:$USER .
+          ls -l 
+          cat audit_report.txt | tee extracted_output.txt
+
+      - name: Comment on PR
+        uses: actions/github-script@v6
         with:
-          fpr_file: 'latest.fpr'
-          
+          script: |
+            const { github } = require('@actions/github');
+      
+            // Get existing comments
+            const existingComments = await github.rest.issues.listComments({
+              issue_number: github.context.issue.number,
+              owner: github.context.repo.owner,
+              repo: github.context.repo.repo
+            });
+      
+            // Filter comments with the subject "HP Fortify Vulnerability Scan Report"
+            const commentsToDelete = existingComments.data.filter(comment => comment.body.startsWith('HP Fortify Vulnerability Scan Report'));
+      
+            // Delete each filtered comment
+            for (const comment of commentsToDelete) {
+              await github.rest.issues.deleteComment({
+                comment_id: comment.id,
+                owner: github.context.repo.owner,
+                repo: github.context.repo.repo
+              });
+            }
+      
+            // Proceed to create the new comment
+            const markdownTable = `### HP Fortify Vulnerability Scan Report\n\n| Kingdom        | Type                      | Subtype               | Severity | SourceLocation                                    |\n|----------------|---------------------------|-----------------------|----------|-------------------------------------------------|\n| Environment    | OpenAPI Misconfiguration | Missing Security Schemes | 2        |\n| Encapsulation  | Cross-Site Request Forgery |                       | 2        | usr/src/src/core/services/ApprovalService.ts (line 20) |\n| Encapsulation  | Cross-Site Request Forgery |                       | 2        | usr/src/src/core/services/TransactionService.ts (line 64) |\n| Environment    | OpenAPI Misconfiguration | Missing Security Schemes | 2        |\n| Environment    | OpenAPI Misconfiguration | Missing Operation Security Requirement | 2        |\n| Environment    | OpenAPI Misconfiguration | Missing Global Security Requirement | 2        |\n| Environment    | OpenAPI Misconfiguration | Missing Global Security Requirement | 2        |`;
+      
+            await github.rest.issues.createComment({
+              issue_number: github.context.issue.number,
+              owner: github.context.repo.owner,
+              repo: github.context.repo.repo,
+              body: markdownTable
+            });
+      
