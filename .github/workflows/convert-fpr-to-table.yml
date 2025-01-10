@@ -34,9 +34,9 @@ jobs:
 
       - name: Read output file
         id: read-output
-        run: |
-          ls -l 
+        run: |          
           sudo chown -R $USER:$USER .
+          ls -l 
           cat audit_report.txt | tee extracted_output.txt
 
       - name: Comment on PR
