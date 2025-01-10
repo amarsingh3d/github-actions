@@ -43,26 +43,34 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const fs = require('fs');
+            const { context, github } = require('@actions/github');
       
-            // Read the raw table from the output file
-            const rawOutput = fs.readFileSync('extracted_output.txt', 'utf8');
+            // Get existing comments
+            const existingComments = await github.rest.issues.listComments({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
       
-            // Transform the raw table into Markdown syntax
-            const lines = rawOutput.split('\n');
-            const header = '| Kingdom        | Type                      | Subtype   | Severity | SourceLocation                                   |';
-            const separator = '|----------------|---------------------------|-----------|----------|-------------------------------------------------|';
-            
-            // Filter and clean up the rows, skipping duplicate header rows
-            const dataRows = lines
-              .filter(line => line.startsWith('|') && !line.includes('=') && !line.includes('Kingdom'));
+            // Filter comments with the subject "HP Fortify Vulnerability Scan Report"
+            const commentsToDelete = existingComments.data.filter(comment => comment.body.startsWith('HP Fortify Vulnerability Scan Report'));
       
-            const markdownTable = [header, separator, ...dataRows].join('\n');
+            // Delete each filtered comment
+            for (const comment of commentsToDelete) {
+              await github.rest.issues.deleteComment({
+                comment_id: comment.id,
+                owner: context.repo.owner,
+                repo: context.repo.repo
+              });
+            }
       
-            // Create the comment
+            // Proceed to create the new comment
+            const markdownTable = `### HP Fortify Vulnerability Scan Report\n\n| Kingdom        | Type                      | Subtype               | Severity | SourceLocation                                    |\n|----------------|---------------------------|-----------------------|----------|-------------------------------------------------|\n| Environment    | OpenAPI Misconfiguration | Missing Security Schemes | 2        |\n| Encapsulation  | Cross-Site Request Forgery |                       | 2        | usr/src/src/core/services/ApprovalService.ts (line 20) |\n| Encapsulation  | Cross-Site Request Forgery |                       | 2        | usr/src/src/core/services/TransactionService.ts (line 64) |\n| Environment    | OpenAPI Misconfiguration | Missing Security Schemes | 2        |\n| Environment    | OpenAPI Misconfiguration | Missing Operation Security Requirement | 2        |\n| Environment    | OpenAPI Misconfiguration | Missing Global Security Requirement | 2        |\n| Environment    | OpenAPI Misconfiguration | Missing Global Security Requirement | 2        |`;
+      
             await github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `### HP Fortify Vulnerability Scan Report\n\n${markdownTable}`
+              body: markdownTable
             });
+      
