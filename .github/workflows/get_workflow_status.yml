@@ -1,0 +1,33 @@
+
+#!/usr/bin/env bash
+set -euo pipefail
+
+# 🔑 Config
+GITHUB_TOKEN="${GITHUB_TOKEN:?Need to set GITHUB_TOKEN}"
+REPO="username/repo"              # e.g. "octocat/Hello-World"
+WORKFLOW_FILE="ci.yml"            # Workflow file name in .github/workflows/
+BRANCH="main"                     # Branch to check
+
+while true; do
+  # Get latest workflow run
+  response=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+    "https://api.github.com/repos/$REPO/actions/workflows/$WORKFLOW_FILE/runs?branch=$BRANCH&per_page=1")
+
+  status=$(echo "$response" | jq -r '.workflow_runs[0].status')
+  conclusion=$(echo "$response" | jq -r '.workflow_runs[0].conclusion')
+
+  echo "⏳ Workflow status: $status (conclusion: $conclusion)"
+
+  if [[ "$status" == "completed" ]]; then
+    echo "✅ Workflow finished with conclusion: $conclusion"
+    break
+  fi
+
+  echo "🔄 Still running... waiting 30s before checking again."
+  sleep 30
+done
+
+# 👉 Perform your task here after workflow is done
+echo "🚀 Running next task..."
+# Example task:
+echo "Hello, world!"
